@@ -13,6 +13,11 @@ import { createMinimax } from "vercel-minimax-ai-provider";
 import FormData from "form-data";
 import jsonwebtoken from "jsonwebtoken";
 import u from "@/utils";
+
+// 注入沙盒的 axios 实例：强制单请求超时，避免网络半开连接导致 pollTask 永久卡死
+const HTTP_TIMEOUT = 180000;
+const sandboxAxios = axios.create({ timeout: HTTP_TIMEOUT });
+
 export default function runCode(code: string, vendor?: Record<string, any>) {
   code = code.replace(/export\s*\{\s*\};?/g, ""); // 去掉 export {} 以免沙盒环境报错
   // 创建一个沙盒
@@ -34,7 +39,7 @@ export default function runCode(code: string, vendor?: Record<string, any>) {
     pollTask,
     fetch: fetch,
     exports,
-    axios,
+    axios: sandboxAxios,
     FormData,
     logger,
     jsonwebtoken,
@@ -79,7 +84,7 @@ export async function zipImageResolution(completeBase64: string, width: number, 
 
 //url转Base64
 export async function urlToBase64(url: string): Promise<string> {
-  const res = await axios.get(url, { responseType: "arraybuffer" });
+  const res = await axios.get(url, { responseType: "arraybuffer", timeout: HTTP_TIMEOUT });
   const mime = res.headers["content-type"] || "image/jpeg";
   const b64 = Buffer.from(res.data).toString("base64");
   return `data:${mime};base64,${b64}`;

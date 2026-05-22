@@ -164,7 +164,7 @@ async function withTaskRecord<T>(
 async function urlToBase64(url: string, retries = 3, delay = 1000): Promise<string> {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const res = await axios.get(url, { responseType: "arraybuffer" });
+      const res = await axios.get(url, { responseType: "arraybuffer", timeout: 180000 });
       const base64 = Buffer.from(res.data).toString("base64");
       return `${base64}`;
     } catch (e) {
